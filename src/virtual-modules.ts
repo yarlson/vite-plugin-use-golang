@@ -35,7 +35,7 @@ export async function loadVirtualModule(
   id: string,
   buildDir: string,
 ): Promise<string | null> {
-  if (id === "wasm_exec.js") {
+  if (id === "/@vite-golang/wasm_exec.js") {
     // Try to find wasm_exec.js from TinyGo installation
     try {
       const tinygoRoot = execSync("tinygo env TINYGOROOT", {

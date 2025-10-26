@@ -110,13 +110,47 @@ export default function golangPlugin(
         return null;
       }
 
-      const { isVirtualModule, loadVirtualModule } = await import(
-        "./virtual-modules"
-      );
+      // Handle wasm_exec.js
+      if (id === "/@vite-golang/wasm_exec.js") {
+        const { execSync } = await import("child_process");
+        const { readFile } = await import("fs/promises");
+        const { join } = await import("path");
 
-      if (isVirtualModule(id)) {
-        const content = await loadVirtualModule(id, buildDir);
-        return content;
+        try {
+          const tinygoRoot = execSync("tinygo env TINYGOROOT", {
+            encoding: "utf-8",
+          }).trim();
+          const wasmExecPath = join(tinygoRoot, "targets", "wasm_exec.js");
+          const content = await readFile(wasmExecPath, "utf-8");
+          return content;
+        } catch (error) {
+          throw new Error(
+            "[use-golang] Could not find wasm_exec.js from TinyGo installation",
+          );
+        }
+      }
+
+      // Handle WASM files - emit as assets
+      if (id.endsWith(".wasm")) {
+        const { readFile } = await import("fs/promises");
+        const { join } = await import("path");
+
+        const path = id.slice("/@vite-golang/".length);
+        const wasmPath = join(buildDir, path);
+
+        try {
+          const source = await readFile(wasmPath);
+          // Emit as asset and return the reference
+          const referenceId = this.emitFile({
+            type: "asset",
+            name: path.split("/").pop(),
+            source,
+          });
+
+          return `export default import.meta.ROLLUP_FILE_URL_${referenceId}`;
+        } catch (error) {
+          throw new Error(`[use-golang] Could not load WASM file: ${wasmPath}`);
+        }
       }
 
       return null;
