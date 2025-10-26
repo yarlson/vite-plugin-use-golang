@@ -130,26 +130,33 @@ export default function golangPlugin(
         }
       }
 
-      // Handle WASM files - emit as assets
+      // Handle WASM files
       if (id.endsWith(".wasm")) {
-        const { readFile } = await import("fs/promises");
-        const { join } = await import("path");
+        // In dev mode, return the URL directly for fetch
+        // In build mode, emit as asset
+        if (config.command === "serve") {
+          // Dev mode: return URL for fetch
+          return `export default ${JSON.stringify(id)}`;
+        } else {
+          // Build mode: emit as asset
+          const { readFile } = await import("fs/promises");
+          const { join } = await import("path");
 
-        const path = id.slice("/@vite-golang/".length);
-        const wasmPath = join(buildDir, path);
+          const path = id.slice("/@vite-golang/".length);
+          const wasmPath = join(buildDir, path);
 
-        try {
-          const source = await readFile(wasmPath);
-          // Emit as asset and return the reference
-          const referenceId = this.emitFile({
-            type: "asset",
-            name: path.split("/").pop(),
-            source,
-          });
+          try {
+            const source = await readFile(wasmPath);
+            const referenceId = this.emitFile({
+              type: "asset",
+              name: path.split("/").pop(),
+              source,
+            });
 
-          return `export default import.meta.ROLLUP_FILE_URL_${referenceId}`;
-        } catch (error) {
-          throw new Error(`[use-golang] Could not load WASM file: ${wasmPath}`);
+            return `export default import.meta.ROLLUP_FILE_URL_${referenceId}`;
+          } catch (error) {
+            throw new Error(`[use-golang] Could not load WASM file: ${wasmPath}`);
+          }
         }
       }
 
@@ -162,8 +169,29 @@ export default function golangPlugin(
     },
 
     configureServer(server) {
-      server.middlewares.use((req, res, next) => {
+      server.middlewares.use(async (req, res, next) => {
         const url = req.url || "";
+
+        // Serve WASM files with correct MIME type
+        if (url.startsWith("/@vite-golang/") && url.endsWith(".wasm")) {
+          const { readFile } = await import("fs/promises");
+          const { join } = await import("path");
+
+          const path = url.slice("/@vite-golang/".length);
+          const wasmPath = join(buildDir, path);
+
+          try {
+            const wasmBuffer = await readFile(wasmPath);
+            res.setHeader("Content-Type", "application/wasm");
+            res.setHeader("Content-Length", wasmBuffer.length);
+            res.end(wasmBuffer);
+            return;
+          } catch (error) {
+            res.statusCode = 404;
+            res.end("WASM file not found");
+            return;
+          }
+        }
 
         if (url === "/__vite_plugin_golang_clean") {
           const { handleCleanCommand } = require("./cli");
