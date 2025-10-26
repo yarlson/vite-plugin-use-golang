@@ -91,5 +91,35 @@ export default function golangPlugin(
       const { handleGoHotUpdate } = await import("./hmr");
       return handleGoHotUpdate(ctx, ctx.modules);
     },
+
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = req.url || "";
+
+        if (url === "/__vite_plugin_golang_clean") {
+          const { handleCleanCommand } = require("./cli");
+          handleCleanCommand({
+            buildDir,
+            tinygoPath: options.tinygoPath || "tinygo",
+          });
+          res.statusCode = 200;
+          res.end("Clean command executed");
+          return;
+        }
+
+        if (url === "/__vite_plugin_golang_doctor") {
+          const { handleDoctorCommand } = require("./cli");
+          handleDoctorCommand({
+            buildDir,
+            tinygoPath: options.tinygoPath || "tinygo",
+          });
+          res.statusCode = 200;
+          res.end("Doctor command executed");
+          return;
+        }
+
+        next();
+      });
+    },
   };
 }
