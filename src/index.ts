@@ -25,6 +25,36 @@ export default function golangPlugin(
     name: "vite-plugin-use-golang",
     enforce: "pre",
 
+    config() {
+      return {
+        optimizeDeps: {
+          exclude: ["/@vite-golang/**"],
+          esbuildOptions: {
+            plugins: [
+              {
+                name: "skip-golang-files",
+                setup(build) {
+                  // Skip files with "use golang" directive during scanning
+                  build.onLoad({ filter: /\.(js|ts|jsx|tsx)$/ }, async (args) => {
+                    const fs = await import("fs/promises");
+                    const content = await fs.readFile(args.path, "utf-8");
+                    if (content.startsWith('"use golang"') || content.startsWith("'use golang'")) {
+                      // Return empty module during scanning
+                      return {
+                        contents: "export default {};",
+                        loader: "js",
+                      };
+                    }
+                    return null;
+                  });
+                },
+              },
+            ],
+          },
+        },
+      };
+    },
+
     configResolved(resolvedConfig) {
       config = resolvedConfig;
       buildManager = new BuildManager(buildDir);
