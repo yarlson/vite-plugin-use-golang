@@ -5,7 +5,6 @@ import (
   "syscall/js"
 )
 
-//export add
 func add(this js.Value, args []js.Value) interface{} {
   a := args[0].Int()
   b := args[1].Int()
@@ -14,7 +13,6 @@ func add(this js.Value, args []js.Value) interface{} {
   return result
 }
 
-//export greet
 func greet(this js.Value, args []js.Value) interface{} {
   name := args[0].String()
   greeting := fmt.Sprintf("Hello from Go, %s!", name)
