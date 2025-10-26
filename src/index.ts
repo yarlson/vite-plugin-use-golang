@@ -85,5 +85,10 @@ export default function golangPlugin(
 
       return null;
     },
+
+    async handleHotUpdate(ctx) {
+      const { handleGoHotUpdate } = await import("./hmr");
+      return handleGoHotUpdate(ctx, ctx.modules);
+    },
   };
 }
