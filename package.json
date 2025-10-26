@@ -13,6 +13,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest",
+    "test:integration": "./integration-test.sh",
     "dev": "tsc --watch"
   },
   "files": [
