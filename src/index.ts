@@ -61,5 +61,29 @@ export default function golangPlugin(
         projectRoot: config.root,
       });
     },
+
+    resolveId(id) {
+      if (id.startsWith("/@vite-golang/")) {
+        return id;
+      }
+      return null;
+    },
+
+    async load(id) {
+      if (!id.startsWith("/@vite-golang/")) {
+        return null;
+      }
+
+      const { isVirtualModule, loadVirtualModule } = await import(
+        "./virtual-modules"
+      );
+
+      if (isVirtualModule(id)) {
+        const content = await loadVirtualModule(id, buildDir);
+        return content;
+      }
+
+      return null;
+    },
   };
 }
