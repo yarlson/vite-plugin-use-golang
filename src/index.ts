@@ -49,7 +49,12 @@ export default function golangPlugin(
       console.log("[use-golang] Plugin initialized");
     },
 
-    async transform(code, id) {
+    async transform(code, id, transformOptions) {
+      // Skip during dependency scanning (ssr: true means it's the optimizer)
+      if (transformOptions?.ssr) {
+        return null;
+      }
+
       // Only process JS/TS files
       if (!/\.[jt]sx?$/.test(id)) {
         return null;
