@@ -1,4 +1,5 @@
 import { join } from "path";
+import { writeFile } from "fs/promises";
 import { detectGoDirective, extractGoCode } from "./detector";
 import { generateFileId, sanitizePath } from "./file-utils";
 import { BuildManager } from "./build-manager";
@@ -10,6 +11,7 @@ export interface TransformContext {
   buildManager: BuildManager;
   compiler: TinyGoCompiler;
   projectRoot: string;
+  generateTypes?: boolean;
 }
 
 export async function transformGoDirective(
@@ -45,6 +47,16 @@ export async function transformGoDirective(
     // Compile to WASM
     const wasmFile = join(subdir, "main.wasm");
     await context.compiler.compile(goFile, wasmFile);
+
+    // Generate TypeScript types if enabled
+    if (context.generateTypes) {
+      const { parseGoFunctions, generateDts } = await import("./type-generator");
+      const functions = parseGoFunctions(wrappedGo);
+      const dts = generateDts(functions);
+
+      const dtsFile = join(subdir, "types.d.ts");
+      await writeFile(dtsFile, dts, "utf-8");
+    }
 
     // Generate JS wrapper
     const jsWrapper = generateJsWrapper(subdirName, context.projectRoot);

@@ -59,6 +59,7 @@ export default function golangPlugin(
         buildManager,
         compiler,
         projectRoot: config.root,
+        generateTypes: options.generateTypes !== false,
       });
     },
 
