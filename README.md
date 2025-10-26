@@ -43,21 +43,36 @@ import (
   "syscall/js"
 )
 
-//export add
 func add(this js.Value, args []js.Value) interface{} {
-  return args[0].Int() + args[1].Int()
+  a := args[0].Int()
+  b := args[1].Int()
+  result := a + b
+  fmt.Printf("Go: %d + %d = %d\n", a, b, result)
+  return result
 }
 
 func main() {
-  fmt.Println("Go WASM initialized!")
+  fmt.Println("Go WASM module initialized!")
+
+  // Export functions to JavaScript
   js.Global().Set("goAdd", js.FuncOf(add))
-  select {} // Keep running
+
+  // Keep the program running
+  select {}
 }
 ```
 
-### 3. Use in Your App
+**Note:** Do NOT use `//export` comments - those are for CGO/C FFI, not WASM JavaScript interop. Use `js.Global().Set()` to expose functions.
 
-The plugin automatically compiles the Go code to WASM and provides a JavaScript wrapper.
+### 3. Use the Go Functions in JavaScript
+
+```javascript
+// The Go functions are available on window after WASM loads
+console.log(window.goAdd(5, 3)); // Outputs: 8
+// Check browser console for Go's fmt.Printf output
+```
+
+The plugin automatically compiles the Go code to WASM and loads it in the browser.
 
 ## How It Works
 
@@ -81,32 +96,66 @@ interface GolangPluginOptions {
 ## Architecture
 
 - **Build Directory**: `.vite-golang/` contains compiled Go files and WASM
-- **Virtual Modules**: `/@vite-golang/*` paths serve WASM and runtime files
+- **Virtual Modules**: `/@vite-golang/*` paths serve WASM and `wasm_exec.js`
+- **Dev Mode**: WASM files served via middleware with `application/wasm` MIME type
+- **Build Mode**: WASM files emitted as assets for bundling
 - **HMR Support**: Changes to Go code trigger full page reload
-- **Type Generation**: Parses `//export` comments to generate TypeScript types
+- **Dependency Scanning**: Custom ESBuild plugin skips Go files during pre-bundling
 
 ## CLI Commands
 
+The plugin provides HTTP endpoints for commands (access via dev server):
+
 ```bash
-vite golang:clean    # Delete .vite-golang/ directory
-vite golang:inspect  # Show compiled output for a file
-vite golang:doctor   # Check TinyGo installation
+# These are accessed via the dev server, not as CLI commands:
+# http://localhost:5173/__vite_plugin_golang_clean
+# http://localhost:5173/__vite_plugin_golang_doctor
+```
+
+Alternatively, manually clean the build directory:
+
+```bash
+rm -rf .vite-golang/
 ```
 
 ## Examples
 
 See the `example/` directory for a complete working demo.
 
+To run the example:
+
+```bash
+cd example
+npm install
+npm run dev
+```
+
+Visit `http://localhost:5173/` and click "Run Go Function" to test the WASM integration.
+
 ## Limitations
 
 - Full page reload on HMR (fine-grained WASM HMR is complex)
 - TinyGo required (standard Go WASM is much larger)
 - Go ↔ JS interop requires `syscall/js` boilerplate
+- `//export` comments don't work (use `js.Global().Set()` instead)
+- Go functions must match `js.FuncOf` signature: `func(js.Value, []js.Value) interface{}`
+- WASM files must be served with correct MIME type (handled automatically in dev/build)
+
+## Known Issues & Solutions
+
+**Issue:** Dependency scanning error with Go code
+**Solution:** Plugin automatically skips Go files during ESBuild pre-bundling
+
+**Issue:** `//export` directives cause compilation errors
+**Solution:** Remove them - they're for CGO, not WASM. Use `js.Global().Set()` instead
+
+**Issue:** WASM MIME type errors
+**Solution:** Plugin serves WASM with `application/wasm` in dev mode
 
 ## License
 
-MIT
+[MIT](./LICENSE)
 
 ## Why?
 
-Because we can. This is proof-of-concept "feature-complete chaos" — it actually works, but you probably shouldn't use it in production.
+Because we can. This is proof-of-concept "feature-complete chaos" — it actually works, and it's actually pretty cool! Use at your own risk. 🤖

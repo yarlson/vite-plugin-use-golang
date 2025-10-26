@@ -17,11 +17,26 @@
     "dev": "tsc --watch"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
-  "keywords": [],
+  "keywords": [
+    "vite",
+    "vite-plugin",
+    "golang",
+    "go",
+    "wasm",
+    "webassembly",
+    "tinygo"
+  ],
+  "description": "Write Go code directly in JavaScript files with a \"use golang\" directive - compiles to WASM at build time",
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/vite-plugin-use-golang"
+  },
   "devDependencies": {
     "@types/node": "^24.9.1",
     "typescript": "^5.9.3",
