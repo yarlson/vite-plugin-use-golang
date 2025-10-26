@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.vite-golang/
+*.log
+.DS_Store
+coverage/
