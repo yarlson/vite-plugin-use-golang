@@ -1,8 +1,45 @@
 # vite-plugin-use-golang
 
-> Write Go code directly in JavaScript files and compile to WebAssembly at build time
+Write Go code in JavaScript files. It compiles to WebAssembly. Actually works.
 
-A Vite plugin that enables the `"use golang"` directive, allowing you to write Go code that gets compiled to WASM and seamlessly integrated into your JavaScript/TypeScript project.
+You drop `"use golang"` at the top of a JS file, write Go code, and Vite compiles it to WASM at build time. The compiled functions show up on `window` like any other JavaScript function. It's absurd, but it's real.
+
+## Why would you do this?
+
+Let's say you want to do image perceptual hashing in the browser. You could wrestle with Canvas APIs and write 200 lines of JavaScript. Or you could use Go's image standard library and let it handle the heavy lifting:
+
+```javascript
+"use golang"
+
+import (
+  "bytes"
+  "image"
+  _ "image/jpeg"
+  _ "image/png"
+  "syscall/js"
+)
+
+func hashImage(this js.Value, args []js.Value) interface{} {
+  imgData := make([]byte, args[0].Length())
+  js.CopyBytesToGo(imgData, args[0])
+
+  img, _, _ := image.Decode(bytes.NewReader(imgData))
+
+  // Do perceptual hashing with Go's image processing...
+  // (see example/ for full implementation)
+
+  return hash
+}
+
+func main() {
+  js.Global().Set("hashImage", js.FuncOf(hashImage))
+  select {}
+}
+```
+
+Now you've got `window.hashImage()` in your JavaScript. Pass it a `Uint8Array` of image data, get back a perceptual hash. The example in this repo does exactly that: drag and drop images, watch it detect duplicates even if they're different sizes or compressed differently.
+
+That's the point. Go has great libraries for things like image processing, cryptography, and data manipulation. Sometimes you want those in the browser without rewriting everything in JavaScript.
 
 ## Installation
 
@@ -10,13 +47,11 @@ A Vite plugin that enables the `"use golang"` directive, allowing you to write G
 npm install -D vite-plugin-use-golang
 ```
 
-**Prerequisites:**
-
-- [TinyGo](https://tinygo.org/getting-started/install/) must be installed
+You'll also need [TinyGo](https://tinygo.org/getting-started/install/) installed. Regular Go compiles to huge WASM files. TinyGo keeps it reasonable.
 
 ## Usage
 
-### 1. Add to Vite Config
+Add it to your Vite config:
 
 ```javascript
 // vite.config.js
@@ -24,16 +59,11 @@ import { defineConfig } from "vite";
 import golangPlugin from "vite-plugin-use-golang";
 
 export default defineConfig({
-  plugins: [
-    golangPlugin({
-      optimization: "z", // TinyGo optimization level
-      generateTypes: true, // Generate TypeScript definitions
-    }),
-  ],
+  plugins: [golangPlugin()],
 });
 ```
 
-### 2. Write Go Code in JavaScript Files
+Write Go in a JS file:
 
 ```javascript
 "use golang"
@@ -43,86 +73,64 @@ import (
   "syscall/js"
 )
 
-func add(this js.Value, args []js.Value) interface{} {
-  a := args[0].Int()
-  b := args[1].Int()
-  result := a + b
-  fmt.Printf("Go: %d + %d = %d\n", a, b, result)
-  return result
+func greet(this js.Value, args []js.Value) interface{} {
+  return fmt.Sprintf("Hello from Go, %s!", args[0].String())
 }
 
 func main() {
-  fmt.Println("Go WASM module initialized!")
-
-  // Export functions to JavaScript
-  js.Global().Set("goAdd", js.FuncOf(add))
-
-  // Keep the program running
+  js.Global().Set("greet", js.FuncOf(greet))
   select {}
 }
 ```
 
-**Note:** Do NOT use `//export` comments - those are for CGO/C FFI, not WASM JavaScript interop. Use `js.Global().Set()` to expose functions.
-
-### 3. Use the Go Functions in JavaScript
+Use it in JavaScript:
 
 ```javascript
-// The Go functions are available on window after WASM loads
-console.log(window.goAdd(5, 3)); // Outputs: 8
-// Check browser console for Go's fmt.Printf output
+console.log(window.greet("world")); // "Hello from Go, world!"
 ```
 
-The plugin automatically compiles the Go code to WASM and loads it in the browser.
+The plugin handles the compilation automatically. Change the Go code, Vite rebuilds it. It works in dev mode and production builds.
 
-## How It Works
+## How it works
 
-1. **Detection**: Plugin scans for `"use golang"` directive in JS/TS files
-2. **Extraction**: Extracts Go code following the directive
-3. **Compilation**: Compiles Go → WASM using TinyGo in `.vite-golang/` directory
-4. **Integration**: Returns JavaScript wrapper that loads and runs the WASM module
+When you add `"use golang"` to a file, the plugin:
+
+1. Extracts the Go code that follows
+2. Writes it to `.vite-golang/` as a temp `.go` file
+3. Runs `tinygo build -target wasm` to compile it
+4. Returns a JavaScript module that loads the WASM and makes your functions available
+
+The WASM file gets bundled with your app. Functions you expose via `js.Global().Set()` show up on `window`. That's it.
 
 ## Configuration
 
+The plugin takes some options if you need them:
+
 ```typescript
-interface GolangPluginOptions {
-  tinygoPath?: string; // Path to TinyGo binary (default: 'tinygo')
-  buildDir?: string; // Build directory (default: '.vite-golang')
-  optimization?: "0" | "1" | "2" | "s" | "z"; // TinyGo -opt flag (default: 'z')
-  generateTypes?: boolean; // Generate .d.ts files (default: true)
-  cleanupDays?: number; // Auto-cleanup threshold (default: 7)
-}
+golangPlugin({
+  tinygoPath: "tinygo", // Path to TinyGo binary
+  buildDir: ".vite-golang", // Where to put compiled files
+  optimization: "z", // TinyGo -opt flag (z = smallest size)
+  generateTypes: true, // Generate .d.ts files for TypeScript
+  cleanupDays: 7, // Auto-cleanup old builds after N days
+});
 ```
 
-## Architecture
+Most of the time you can just use the defaults.
 
-- **Build Directory**: `.vite-golang/` contains compiled Go files and WASM
-- **Virtual Modules**: `/@vite-golang/*` paths serve WASM and `wasm_exec.js`
-- **Dev Mode**: WASM files served via middleware with `application/wasm` MIME type
-- **Build Mode**: WASM files emitted as assets for bundling
-- **HMR Support**: Changes to Go code trigger full page reload
-- **Dependency Scanning**: Custom ESBuild plugin skips Go files during pre-bundling
+## Things to know
 
-## CLI Commands
+**Don't use `//export` comments.** Those are for CGO, not WASM. Use `js.Global().Set()` to expose functions to JavaScript.
 
-The plugin provides HTTP endpoints for commands (access via dev server):
+**Go functions need a specific signature.** They have to match what `js.FuncOf()` expects: `func(this js.Value, args []js.Value) interface{}`. Check the [syscall/js docs](https://pkg.go.dev/syscall/js) if you get stuck.
 
-```bash
-# These are accessed via the dev server, not as CLI commands:
-# http://localhost:5173/__vite_plugin_golang_clean
-# http://localhost:5173/__vite_plugin_golang_doctor
-```
+**HMR does a full page reload.** Hot module replacement with WASM is complicated. When you change Go code, the page reloads. It's not ideal but it's fine for development.
 
-Alternatively, manually clean the build directory:
+**You need TinyGo, not regular Go.** Standard Go WASM binaries are massive (multiple MB minimum). TinyGo produces much smaller files. Install it from [tinygo.org](https://tinygo.org/getting-started/install/).
 
-```bash
-rm -rf .vite-golang/
-```
+## Example
 
-## Examples
-
-See the `example/` directory for a complete working demo.
-
-To run the example:
+There's a working demo in the `example/` directory. It implements image perceptual hashing: upload images, it computes hashes, compares them, and tells you if they're similar.
 
 ```bash
 cd example
@@ -130,32 +138,21 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:5173/` and click "Run Go Function" to test the WASM integration.
+Open http://localhost:5173 and drag some images onto the page. Try uploading the same photo at different sizes. Watch it detect they're similar even though the bytes are different.
 
-## Limitations
+## Is this a good idea?
 
-- Full page reload on HMR (fine-grained WASM HMR is complex)
-- TinyGo required (standard Go WASM is much larger)
-- Go ↔ JS interop requires `syscall/js` boilerplate
-- `//export` comments don't work (use `js.Global().Set()` instead)
-- Go functions must match `js.FuncOf` signature: `func(js.Value, []js.Value) interface{}`
-- WASM files must be served with correct MIME type (handled automatically in dev/build)
+Probably not for most projects. JavaScript is fast enough for most things, and adding a WASM build step adds complexity. But if you're doing something compute-heavy or you really want to use a specific Go library, it works.
 
-## Known Issues & Solutions
+The real use cases are things like:
 
-**Issue:** Dependency scanning error with Go code
-**Solution:** Plugin automatically skips Go files during ESBuild pre-bundling
+- Image/video processing (Go has good libraries for this)
+- Cryptography (when you want battle-tested implementations)
+- Data parsing for unusual formats
+- Scientific computing where you already have Go code
 
-**Issue:** `//export` directives cause compilation errors
-**Solution:** Remove them - they're for CGO, not WASM. Use `js.Global().Set()` instead
-
-**Issue:** WASM MIME type errors
-**Solution:** Plugin serves WASM with `application/wasm` in dev mode
+It's not a replacement for JavaScript. It's a tool for when you specifically need what Go provides.
 
 ## License
 
 [MIT](./LICENSE)
-
-## Why?
-
-Because we can. This is proof-of-concept "feature-complete chaos" — it actually works, and it's actually pretty cool! Use at your own risk. 🤖

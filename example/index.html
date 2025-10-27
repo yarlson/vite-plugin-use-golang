@@ -3,26 +3,133 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>use golang - Vite Plugin Demo</title>
+    <title>use-golang Demo: Image Hashing</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #0f0f0f;
+        color: #e0e0e0;
+        padding: 2rem;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: #fff;
+      }
+
+      .subtitle {
+        color: #888;
+        margin-bottom: 2rem;
+      }
+
+      #drop-zone {
+        border: 2px dashed #444;
+        border-radius: 8px;
+        padding: 4rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 2rem;
+        background: #1a1a1a;
+      }
+
+      #drop-zone:hover {
+        border-color: #666;
+        background: #222;
+      }
+
+      #drop-zone.dragover {
+        border-color: #0af;
+        background: #162030;
+      }
+
+      #drop-zone p {
+        font-size: 1.2rem;
+        color: #aaa;
+      }
+
+      #file-input {
+        display: none;
+      }
+
+      #results {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 1.5rem;
+        font-family: "Monaco", "Courier New", monospace;
+        font-size: 0.9rem;
+        white-space: pre-wrap;
+        min-height: 200px;
+        color: #0f0;
+      }
+
+      .info {
+        margin-top: 2rem;
+        padding: 1rem;
+        background: #1a1a1a;
+        border-left: 3px solid #0af;
+        border-radius: 4px;
+      }
+
+      .info h2 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .info p {
+        color: #aaa;
+        font-size: 0.95rem;
+      }
+    </style>
   </head>
   <body>
-    <h1>vite-plugin-use-golang Demo</h1>
-    <div id="app">
-      <p>Check the console for output!</p>
-      <button id="run">Run Go Function</button>
-      <div
-        id="output"
-        style="
-          margin-top: 20px;
-          padding: 10px;
-          background: #f0f0f0;
-          border-radius: 5px;
-        "
-      >
-        <strong>Output:</strong>
-        <pre id="results"></pre>
+    <div class="container">
+      <h1>"use golang" Demo</h1>
+      <p class="subtitle">Image perceptual hashing with Go + WASM</p>
+
+      <div id="drop-zone">
+        <p>📸 Drop images here or click to upload</p>
+        <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem">
+          PNG or JPEG only
+        </p>
+      </div>
+
+      <input
+        type="file"
+        id="file-input"
+        accept="image/png,image/jpeg"
+        multiple
+      />
+
+      <div id="results"></div>
+
+      <div class="info">
+        <h2>What's happening?</h2>
+        <p>
+          This demo uses Go's image processing library to generate perceptual
+          hashes. Upload multiple copies of the same image (different sizes,
+          compressed, edited) and watch it detect they're similar. Try it with
+          completely different images too. All the heavy lifting happens in Go,
+          compiled to WASM.
+        </p>
       </div>
     </div>
+
     <script type="module" src="/src/main.js"></script>
     <script type="module" src="/src/demo.js"></script>
   </body>

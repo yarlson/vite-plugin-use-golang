@@ -50,7 +50,9 @@ export async function transformGoDirective(
 
     // Generate TypeScript types if enabled
     if (context.generateTypes) {
-      const { parseGoFunctions, generateDts } = await import("./type-generator");
+      const { parseGoFunctions, generateDts } = await import(
+        "./type-generator"
+      );
       const functions = parseGoFunctions(wrappedGo);
       const dts = generateDts(functions);
 

@@ -30,12 +30,12 @@
     "webassembly",
     "tinygo"
   ],
-  "description": "Write Go code directly in JavaScript files with a \"use golang\" directive - compiles to WASM at build time",
+  "description": "Write Go code in JavaScript files. Compiles to WebAssembly. Actually works.",
   "author": "",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/vite-plugin-use-golang"
+    "url": "https://github.com/yarlson/vite-plugin-use-golang"
   },
   "devDependencies": {
     "@types/node": "^24.9.1",

@@ -35,18 +35,24 @@ export default function golangPlugin(
                 name: "skip-golang-files",
                 setup(build) {
                   // Skip files with "use golang" directive during scanning
-                  build.onLoad({ filter: /\.(js|ts|jsx|tsx)$/ }, async (args) => {
-                    const fs = await import("fs/promises");
-                    const content = await fs.readFile(args.path, "utf-8");
-                    if (content.startsWith('"use golang"') || content.startsWith("'use golang'")) {
-                      // Return empty module during scanning
-                      return {
-                        contents: "export default {};",
-                        loader: "js",
-                      };
-                    }
-                    return null;
-                  });
+                  build.onLoad(
+                    { filter: /\.(js|ts|jsx|tsx)$/ },
+                    async (args) => {
+                      const fs = await import("fs/promises");
+                      const content = await fs.readFile(args.path, "utf-8");
+                      if (
+                        content.startsWith('"use golang"') ||
+                        content.startsWith("'use golang'")
+                      ) {
+                        // Return empty module during scanning
+                        return {
+                          contents: "export default {};",
+                          loader: "js",
+                        };
+                      }
+                      return null;
+                    },
+                  );
                 },
               },
             ],
@@ -155,7 +161,9 @@ export default function golangPlugin(
 
             return `export default import.meta.ROLLUP_FILE_URL_${referenceId}`;
           } catch (error) {
-            throw new Error(`[use-golang] Could not load WASM file: ${wasmPath}`);
+            throw new Error(
+              `[use-golang] Could not load WASM file: ${wasmPath}`,
+            );
           }
         }
       }
