@@ -1,46 +1,51 @@
 {
-  "name": "vite-plugin-use-golang",
-  "version": "0.1.0",
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "scripts": {
-    "build": "tsc",
-    "test": "vitest",
-    "test:integration": "./integration-test.sh",
-    "dev": "tsc --watch"
-  },
-  "files": [
-    "dist",
-    "LICENSE",
-    "README.md"
-  ],
-  "keywords": [
-    "vite",
-    "vite-plugin",
-    "golang",
-    "go",
-    "wasm",
-    "webassembly",
-    "tinygo"
-  ],
-  "description": "Write Go code in JavaScript files. Compiles to WebAssembly. Actually works.",
-  "author": "",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yarlson/vite-plugin-use-golang"
-  },
-  "devDependencies": {
-    "@types/node": "^24.9.1",
-    "typescript": "^5.9.3",
-    "vite": "^7.1.12",
-    "vitest": "^4.0.3"
-  }
+	"name": "vite-plugin-use-golang",
+	"version": "0.1.0",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"build": "tsc",
+		"test": "vitest",
+		"test:integration": "./integration-test.sh",
+		"dev": "tsc --watch",
+		"lint": "biome lint .",
+		"format": "biome format --write .",
+		"check": "biome check .",
+		"check:write": "biome check --write ."
+	},
+	"files": [
+		"dist",
+		"LICENSE",
+		"README.md"
+	],
+	"keywords": [
+		"vite",
+		"vite-plugin",
+		"golang",
+		"go",
+		"wasm",
+		"webassembly",
+		"tinygo"
+	],
+	"description": "Write Go code in JavaScript files. Compiles to WebAssembly. Actually works.",
+	"author": "",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/yarlson/vite-plugin-use-golang"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.2",
+		"@types/node": "^24.10.0",
+		"typescript": "^5.9.3",
+		"vite": "^7.1.12",
+		"vitest": "^4.0.6"
+	}
 }
