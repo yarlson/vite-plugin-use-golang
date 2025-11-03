@@ -1,5 +1,5 @@
 import type { HmrContext, ModuleNode } from "vite";
-import { detectGoDirective } from "./detector";
+import { detectGoDirective } from "./detector.js";
 import { readFile } from "fs/promises";
 
 export async function handleGoHotUpdate(

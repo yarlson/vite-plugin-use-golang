@@ -18,7 +18,7 @@ export async function handleCleanCommand(context: CliContext): Promise<void> {
 export async function handleDoctorCommand(context: CliContext): Promise<void> {
   console.log("[use-golang] Running diagnostics...\n");
 
-  const { TinyGoCompiler } = await import("./compiler");
+  const { TinyGoCompiler } = await import("./compiler.js");
   const compiler = new TinyGoCompiler({ tinygoPath: context.tinygoPath });
 
   const installed = await compiler.isInstalled();

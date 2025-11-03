@@ -1,7 +1,7 @@
 import type { Plugin, ResolvedConfig } from "vite";
-import { BuildManager } from "./build-manager";
-import { TinyGoCompiler } from "./compiler";
-import { transformGoDirective } from "./transform";
+import { BuildManager } from "./build-manager.js";
+import { TinyGoCompiler } from "./compiler.js";
+import { transformGoDirective } from "./transform.js";
 
 export interface GolangPluginOptions {
   tinygoPath?: string;
@@ -172,7 +172,7 @@ export default function golangPlugin(
     },
 
     async handleHotUpdate(ctx) {
-      const { handleGoHotUpdate } = await import("./hmr");
+      const { handleGoHotUpdate } = await import("./hmr.js");
       return handleGoHotUpdate(ctx, ctx.modules);
     },
 

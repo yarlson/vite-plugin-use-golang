@@ -1,11 +1,11 @@
 import { join } from "path";
 import { writeFile } from "fs/promises";
-import { detectGoDirective, extractGoCode } from "./detector";
-import { generateFileId, sanitizePath } from "./file-utils";
-import { BuildManager } from "./build-manager";
-import { TinyGoCompiler } from "./compiler";
-import { wrapGoCode } from "./go-wrapper";
-import { generateJsWrapper } from "./js-wrapper";
+import { detectGoDirective, extractGoCode } from "./detector.js";
+import { generateFileId, sanitizePath } from "./file-utils.js";
+import { BuildManager } from "./build-manager.js";
+import { TinyGoCompiler } from "./compiler.js";
+import { wrapGoCode } from "./go-wrapper.js";
+import { generateJsWrapper } from "./js-wrapper.js";
 
 export interface TransformContext {
   buildManager: BuildManager;
@@ -51,7 +51,7 @@ export async function transformGoDirective(
     // Generate TypeScript types if enabled
     if (context.generateTypes) {
       const { parseGoFunctions, generateDts } = await import(
-        "./type-generator"
+        "./type-generator.js"
       );
       const functions = parseGoFunctions(wrappedGo);
       const dts = generateDts(functions);
