@@ -4,6 +4,10 @@ Write Go code in JavaScript files. It compiles to WebAssembly. Actually works.
 
 You drop `"use golang"` at the top of a JS file, write Go code, and Vite compiles it to WASM at build time. The compiled functions show up on `window` like any other JavaScript function. It's absurd, but it's real.
 
+## Requirements
+
+This plugin shells out to the TinyGo CLI. Install [TinyGo](https://tinygo.org/getting-started/install/) on your system and ensure `tinygo` is available on your `PATH` (or set the `tinygoPath` option). You can confirm with `tinygo version`. Regular Go won't work here—the WASM output is far too large.
+
 ## Why would you do this?
 
 Let's say you want to do image perceptual hashing in the browser. You could wrestle with Canvas APIs and write 200 lines of JavaScript. Or you could use Go's image standard library and let it handle the heavy lifting:
@@ -46,8 +50,6 @@ That's the point. Go has great libraries for things like image processing, crypt
 ```bash
 npm install -D vite-plugin-use-golang
 ```
-
-You'll also need [TinyGo](https://tinygo.org/getting-started/install/) installed. Regular Go compiles to huge WASM files. TinyGo keeps it reasonable.
 
 ## Usage
 
