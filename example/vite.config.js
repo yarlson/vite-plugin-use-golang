@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import golangPlugin from "../dist/index.js";
+import golangPlugin from "vite-plugin-use-golang";
 
 export default defineConfig({
 	plugins: [

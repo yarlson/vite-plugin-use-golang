@@ -6,7 +6,7 @@ const images = new Map(); // filename -> {hash, dataUrl}
 
 function addOutput(text) {
 	if (resultsEl) {
-		resultsEl.textContent += text + "\n";
+		resultsEl.textContent += `${text}\n`;
 	}
 	console.log(text);
 }
