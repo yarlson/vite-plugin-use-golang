@@ -5,5 +5,5 @@ export function generateFileId(filePath: string): string {
 }
 
 export function sanitizePath(filePath: string): string {
-	return filePath.replace(/^\//, "").replace(/[/.]/g, "_");
+	return filePath.replace(/^\//, "").replace(/[/.]/g, "_").replace(/:/g, "_");
 }

@@ -28,7 +28,7 @@ export default function golangPlugin(
 		config() {
 			return {
 				optimizeDeps: {
-					exclude: ["/@vite-golang/**"],
+					exclude: ["/@vite-golang/*"],
 					esbuildOptions: {
 						plugins: [
 							{
