@@ -33,4 +33,9 @@ describe("sanitizePath", () => {
 	it("should replace dots with underscores", () => {
 		expect(sanitizePath("foo.bar.js")).toBe("foo_bar_js");
 	});
+
+	// windows path
+	it("should replace colons with underscores", () => {
+		expect(sanitizePath("C:/src/foo.js")).toBe("C__src_foo_js");
+	});
 });
